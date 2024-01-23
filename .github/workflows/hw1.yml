@@ -63,15 +63,15 @@ jobs:
           submodules: true
 
 # собираем либу googletest
-      - run: cmake -S $env:GOOGLETEST_PATH -B $env:GOOGLETEST_PATH -Dgtest_force_shared_crt=ON -DCMAKE_INSTALL_PREFIX="hw1_github_actions/gtest"
-      - run: cmake --build $env:GOOGLETEST_PATH
-      - run: cmake --build $env:GOOGLETEST_PATH --target install
+      - run: cmake -S $GOOGLETEST_PATH -B $GOOGLETEST_PATH -Dgtest_force_shared_crt=ON -DCMAKE_INSTALL_PREFIX="hw1_github_actions/gtest"
+      - run: cmake --build $GOOGLETEST_PATH
+      - run: cmake --build $GOOGLETEST_PATH --target install
 
 # собираем приложение
-      - run: cmake -S $env:HOMEWORK_PATH -B $env:HOMEWORK_PATH -DPATCH_VERSION=${{github.run_number}} -DGTEST_ROOT="gtest"
-      - run: cmake --build $env:HOMEWORK_PATH
-      - run: ctest --test-dir $env:HOMEWORK_PATH
-      - run: cmake --build $env:HOMEWORK_PATH --target package
+      - run: cmake -S $HOMEWORK_PATH -B $env:HOMEWORK_PATH -DPATCH_VERSION=${{github.run_number}} -DGTEST_ROOT="gtest"
+      - run: cmake --build $HOMEWORK_PATH
+      - run: ctest --test-dir $HOMEWORK_PATH
+      - run: cmake --build $HOMEWORK_PATH --target package
 
 # деплой
       - name: Gets latest created release info
