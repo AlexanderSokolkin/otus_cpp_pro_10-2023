@@ -1,0 +1,4 @@
+build/
+task/
+hw1_github_actions/gtest/
+judge/
