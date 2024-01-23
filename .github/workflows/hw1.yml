@@ -68,7 +68,7 @@ jobs:
       - run: cmake --build $GOOGLETEST_PATH --target install
 
 # собираем приложение
-      - run: cmake -S $HOMEWORK_PATH -B $env:HOMEWORK_PATH -DPATCH_VERSION=${{github.run_number}} -DGTEST_ROOT="gtest"
+      - run: cmake -S $HOMEWORK_PATH -B $HOMEWORK_PATH -DPATCH_VERSION=${{github.run_number}} -DGTEST_ROOT="gtest"
       - run: cmake --build $HOMEWORK_PATH
       - run: ctest --test-dir $HOMEWORK_PATH
       - run: cmake --build $HOMEWORK_PATH --target package
