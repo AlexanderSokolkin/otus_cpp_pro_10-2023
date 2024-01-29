@@ -39,7 +39,6 @@ set_target_properties(ip_filter_test
 		CXX_STANDARD_REQUIRED ON
 )
 
-
 enable_testing()
 add_test(ip_filter_test ip_filter_test)
 		
