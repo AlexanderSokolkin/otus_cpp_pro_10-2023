@@ -1,0 +1,87 @@
+name: 'homework 2 - ip filter'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hw2_ip_filter/**'
+
+env:
+  HOMEWORK_DIR: hw2_ip_filter
+  UNIT_TESTS_DIR: hw2_ip_filter/unit_tests
+
+
+jobs:
+  build_win:
+    runs-on: windows-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+# скачиваем либу googletest
+      - run: vcpkg install gtest --triplet x64-windows
+
+# собираем приложение
+      - run: cmake -S $env:HOMEWORK_DIR -B $env:HOMEWORK_DIR -DPATCH_VERSION=${{github.run_number}} -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+      - run: cmake --build $env:HOMEWORK_DIR
+      - run: ctest --test-dir $env:UNIT_TESTS_DIR
+      - run: cmake --build $env:HOMEWORK_DIR --target package
+
+# деплой
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: hw2_ip_filter_v${{ github.run_number }}
+          release_name: hw2_ip_filter_release_${{ github.run_number }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hw2_ip_filter/src/ip_filter-0.0.${{ github.run_number }}-win64.zip
+          asset_name: ip_filter-0.0.${{ github.run_number }}-win64.zip
+          asset_content_type: application/zip
+
+  build_deb:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    needs: build_win
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+# скачиваем либу googletest
+      - run: sudo apt update && sudo apt install libgtest-dev
+
+# собираем приложение
+      - run: cmake -S $HOMEWORK_DIR -B $HOMEWORK_DIR -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $HOMEWORK_DIR
+      - run: ctest --test-dir $UNIT_TESTS_DIR
+      - run: cmake --build $HOMEWORK_DIR --target package
+
+# деплой
+      - name: Gets latest created release info
+        id: latest_release_info
+        uses: jossef/action-latest-release-info@v1.2.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.latest_release_info.outputs.upload_url }}
+          asset_path: ./hw2_ip_filter/src/ip_filter-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: ip_filter-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
