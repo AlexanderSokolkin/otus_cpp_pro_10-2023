@@ -23,7 +23,6 @@ void test_std_map()
 	}
 }
 
-
 void test_custom_vector()
 {
 	std::cout << "**** test_custom_vector\n";
