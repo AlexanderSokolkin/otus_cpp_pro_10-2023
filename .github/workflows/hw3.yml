@@ -26,7 +26,7 @@ jobs:
       - run: cmake --build $env:CATCH2_DIR/build --target install
 
 # собираем приложение
-      - run: cmake -S $env:HOMEWORK_DIR -B $env:HOMEWORK_DIR -DCatch2_DIR="hw3_allocator/catch_install/lib/cmake/Catch2" -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake -S $env:HOMEWORK_DIR -B $env:HOMEWORK_DIR -DCatch2_DIR="../catch_install/lib/cmake/Catch2" -DPATCH_VERSION=${{github.run_number}}
       - run: cmake --build $env:HOMEWORK_DIR
       - run: cmake --build $env:HOMEWORK_DIR --target package
 
@@ -58,13 +58,15 @@ jobs:
     needs: build_win
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: true
 
 # собираем либу catch2
       - run: cmake -S $CATCH2_DIR -B $CATCH2_DIR/build -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
       - run: cmake --build $CATCH2_DIR/build --target install
 
 # собираем приложение
-      - run: cmake -S $HOMEWORK_DIR -B $HOMEWORK_DIR -DCatch2_DIR="hw3_allocator/catch_install/lib/cmake/Catch2" -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake -S $HOMEWORK_DIR -B $HOMEWORK_DIR -DCatch2_DIR="../catch_install/lib/cmake/Catch2" -DPATCH_VERSION=${{github.run_number}}
       - run: cmake --build $HOMEWORK_DIR
       - run: cmake --build $HOMEWORK_DIR --target package
 
