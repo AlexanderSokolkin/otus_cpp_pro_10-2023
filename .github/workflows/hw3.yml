@@ -1,0 +1,89 @@
+name: 'homework 3 - allocator'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hw3_allocator/**'
+
+env:
+  CATCH2_DIR: hw3_allocator/Catch2
+  HOMEWORK_DIR: hw3_allocator
+
+
+jobs:
+  build_win:
+    runs-on: windows-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+# собираем либу catch2
+      - run: cmake -S $env:CATCH2_DIR -B $env:CATCH2_DIR -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
+      - run: cmake --build $env:CATCH2_DIR
+      - run: cmake --build $env:CATCH2_DIR --target install
+
+
+# собираем приложение
+      - run: cmake -S $env:HOMEWORK_DIR -B $env:HOMEWORK_DIR -DCatch2_DIR="catch_install" -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $env:HOMEWORK_DIR
+      - run: cmake --build $env:HOMEWORK_DIR --target package
+
+# деплой
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: hw3_allocator_v${{ github.run_number }}
+          release_name: hw3_allocator_release_${{ github.run_number }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hw3_allocator/allocator-0.0.${{ github.run_number }}-win64.zip
+          asset_name: allocator-0.0.${{ github.run_number }}-win64.zip
+          asset_content_type: application/zip
+
+  build_deb:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    needs: build_win
+    steps:
+      - uses: actions/checkout@v3
+
+# собираем либу catch2
+      - run: cmake -S $CATCH2_DIR -B $CATCH2_DIR -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
+      - run: cmake --build $CATCH2_DIR
+      - run: cmake --build $CATCH2_DIR --target install
+
+# собираем приложение
+      - run: cmake -S $HOMEWORK_DIR -B $HOMEWORK_DIR -DCatch2_DIR="catch_install" -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $HOMEWORK_DIR
+      - run: cmake --build $HOMEWORK_DIR --target package
+
+# деплой
+      - name: Gets latest created release info
+        id: latest_release_info
+        uses: jossef/action-latest-release-info@v1.2.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.latest_release_info.outputs.upload_url }}
+          asset_path: ./hw3_allocator/allocator-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: allocator-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
