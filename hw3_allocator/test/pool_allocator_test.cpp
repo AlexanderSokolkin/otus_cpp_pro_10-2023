@@ -5,7 +5,6 @@
 #include "pool_allocator.h"
 
 
-
 TEST_CASE("Factorials are computed", "[factorial]")
 {
     REQUIRE(factorial(1) == 1);

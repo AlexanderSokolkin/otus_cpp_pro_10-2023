@@ -22,7 +22,7 @@ jobs:
           submodules: true
 
 # собираем либу catch2
-      - run: cmake -B$env:CATCH2_DIR/build -H$env:CATCH2_DIR -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
+      - run: cmake -S $env:CATCH2_DIR -B $env:CATCH2_DIR/build -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
       - run: cmake --build $env:CATCH2_DIR/build --targer install
 
 # собираем приложение
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v3
 
 # собираем либу catch2
-      - run: cmake -B$CATCH2_DIR/build -H$CATCH2_DIR -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
+      - run: cmake -S $CATCH2_DIR -B $CATCH2_DIR/build -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="hw3_allocator/catch_install"
       - run: cmake --build $CATCH2_DIR/build --targer install
 
 # собираем приложение
