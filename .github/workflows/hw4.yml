@@ -1,0 +1,96 @@
+name: 'hw4 - print_ip'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hw4_print_ip/**'
+
+env:
+  HOMEWORK_DIR: hw4_print_ip
+
+
+jobs:
+  build_win:
+    runs-on: windows-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+
+# собираем приложение
+      - run: cmake -S $env:HOMEWORK_DIR -B $env:HOMEWORK_DIR -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $env:HOMEWORK_DIR
+      - run: cmake --build $env:HOMEWORK_DIR --target package
+
+# деплой
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: hw4_print_ip_v${{ github.run_number }}
+          release_name: hw4_print_ip_release_${{ github.run_number }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hw4_print_ip/print_ip-0.0.${{ github.run_number }}-win64.zip
+          asset_name: print_ip-0.0.${{ github.run_number }}-win64.zip
+          asset_content_type: application/zip
+
+  build_deb:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    needs: build_win
+    steps:
+      - uses: actions/checkout@v3
+
+# собираем приложение
+      - run: cmake -S $HOMEWORK_DIR -B $HOMEWORK_DIR -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $HOMEWORK_DIR
+      - run: cmake --build $HOMEWORK_DIR --target package
+
+# деплой
+      - name: Gets latest created release info
+        id: latest_release_info
+        uses: jossef/action-latest-release-info@v1.2.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.latest_release_info.outputs.upload_url }}
+          asset_path: ./hw4_print_ip/print_ip-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: print_ip-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
+
+  build_documentation:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+      - name: Doxygen Action
+        uses: mattnotmitt/doxygen-action@v1.1.0
+        with:
+          doxyfile-path: Doxyfile
+          working-directory: ${{ env.HOMEWORK_DIR }}
+
+      - name: GH Pages Deployment
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ env.HOMEWORK_DIR }}/doc/html/
+          enable_jekyll: false
+          allow_empty_commit: false
+          force_orphan: true
+          publish_branch: pages
