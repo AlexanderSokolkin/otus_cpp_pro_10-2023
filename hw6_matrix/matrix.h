@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 #include <tuple>
-
+#include <algorithm>
 
 
 
@@ -17,7 +17,7 @@ class Matrix
 		T val;
 	};
 
-	auto getNode(int row, int col) {
+	typename std::list<Node>::iterator getNode(int row, int col) {
 		return std::find_if(m_lst.begin(),
 							m_lst.end(),
 							[row, col] (const Node& node) {
