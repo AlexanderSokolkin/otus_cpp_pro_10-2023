@@ -1,0 +1,75 @@
+name: 'hw6 - matrix'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hw6_matrix/**'
+
+env:
+  HOMEWORK_DIR: hw6_matrix
+
+
+jobs:
+  build_win:
+    runs-on: windows-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+
+# собираем приложение
+      - run: cmake -S $env:HOMEWORK_DIR -B $env:HOMEWORK_DIR -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $env:HOMEWORK_DIR
+      - run: cmake --build $env:HOMEWORK_DIR --target package
+
+# деплой
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: hw6_matrix_v${{ github.run_number }}
+          release_name: hw6_matrix_release_${{ github.run_number }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hw6_matrix/matrix-0.0.${{ github.run_number }}-win64.zip
+          asset_name: matrix-0.0.${{ github.run_number }}-win64.zip
+          asset_content_type: application/zip
+
+  build_deb:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    needs: build_win
+    steps:
+      - uses: actions/checkout@v3
+
+# собираем приложение
+      - run: cmake -S $HOMEWORK_DIR -B $HOMEWORK_DIR -DPATCH_VERSION=${{github.run_number}}
+      - run: cmake --build $HOMEWORK_DIR
+      - run: cmake --build $HOMEWORK_DIR --target package
+
+# деплой
+      - name: Gets latest created release info
+        id: latest_release_info
+        uses: jossef/action-latest-release-info@v1.2.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.latest_release_info.outputs.upload_url }}
+          asset_path: ./hw6_matrix/matrix-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: matrix-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
